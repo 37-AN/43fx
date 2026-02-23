@@ -27,8 +27,10 @@ async def ai_train(container: ServiceContainer = Depends(get_container)) -> AITr
 def ai_enable(container: ServiceContainer = Depends(get_container)) -> ActionResponse:
     summary = container.ai_service.set_enabled(True)
     if not summary["model_loaded"]:
+        if summary.get("provider") == "ollama":
+            return ActionResponse(status="warning", detail="Ollama model unavailable. Ensure Ollama is running and model is pulled.")
         return ActionResponse(status="warning", detail="AI model missing. Train model before enabling.")
-    return ActionResponse(status="ok", detail="AI filter enabled")
+    return ActionResponse(status="ok", detail=f"AI filter enabled ({summary.get('provider', 'local')})")
 
 
 @router.post("/ai/disable", response_model=ActionResponse)

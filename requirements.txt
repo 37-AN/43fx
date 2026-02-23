@@ -1,4 +1,5 @@
 backtrader
+numpy
 pandas
 PyYAML
 requests

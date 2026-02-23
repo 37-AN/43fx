@@ -202,14 +202,17 @@ class EMATrendATRStrategyLogic(BaseSignalStrategy):
         #       (e.g., neural networks, reinforcement-learning agents).
         """
         if self.config.ai_enabled and not self._ai_model_loaded and self.ai_config.get("enabled", False):
-            model_path = str(self.ai_config.get("model_path", "models/trade_filter.pkl"))
-            from src.ai.trade_filter_model import load_model as load_ai_model
+            from src.ai.model_resolver import resolve_ai_model
 
-            self.ai_model = load_ai_model(model_path)
+            self.ai_model, provider, model_ref = resolve_ai_model({"ai": self.ai_config})
             self._ai_model_loaded = True
             self._ai_active = self.ai_model is not None
             if not self._ai_active:
-                logger.warning("AI enabled but model missing at %s. Passing signal through.", model_path)
+                logger.warning(
+                    "AI enabled but provider=%s model=%s unavailable. Passing signal through.",
+                    provider,
+                    model_ref,
+                )
 
         if not self._ai_active or self.ai_model is None:
             return signal

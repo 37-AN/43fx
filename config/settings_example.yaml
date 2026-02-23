@@ -47,8 +47,12 @@ data:
 
 ai:
   enabled: false
-  model_type: "logistic"
-  model_path: "models/trade_filter.pkl"
+  provider: "ollama"
+  model_type: "ollama"
+  model_path: "ollama:llama3.2:1b"
+  ollama_model: "llama3.2:1b"
+  ollama_base_url: "http://127.0.0.1:11434"
+  ollama_timeout_seconds: 8
   train_min_trades: 200
   probability_threshold: 0.55
   features:

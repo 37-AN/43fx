@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Optional
 import pandas as pd
 
 from src.config_loader import load_config
-from src.ai.trade_filter_model import load_model as load_ai_model
+from src.ai.model_resolver import resolve_ai_model
 from src.execution.broker_api_base import BrokerAPI
 from src.execution.dummy_broker import DummyBroker
 from src.execution.oanda_client import OandaClient
@@ -77,14 +77,15 @@ class LiveTradingRunner:
         
         ai_enabled = bool(ai_cfg.get("enabled", False))
         ai_model = None
-        
+
         if ai_enabled:
-            model_path = str(ai_cfg.get("model_path", "models/trade_filter.pkl"))
-            ai_model = load_ai_model(model_path)
+            ai_model, provider, model_ref = resolve_ai_model({"ai": ai_cfg})
             if ai_model is None:
                 self.logger.warning(
-                    "AI filter is enabled but model could not be loaded from %s. "
-                    "Disabling AI filter for this live session.", model_path
+                    "AI filter is enabled but model provider=%s ref=%s could not be loaded. "
+                    "Disabling AI filter for this live session.",
+                    provider,
+                    model_ref,
                 )
                 ai_enabled = False
         

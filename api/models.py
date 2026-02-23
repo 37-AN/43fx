@@ -72,6 +72,7 @@ class AITrainResponse(BaseModel):
 class AIStatusResponse(BaseModel):
     enabled: bool
     model_loaded: bool
+    provider: str
     model_path: str
     probability_threshold: float
     training_sample_size: int

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 import backtrader as bt
 import pandas as pd
 
-from src.ai.trade_filter_model import load_model as load_ai_model
+from src.ai.model_resolver import resolve_ai_model
 from src.config_loader import load_config
 from src.data.data_loader import load_historical_csv
 from src.data.synthetic_generator import generate_trending_series
@@ -329,12 +329,14 @@ def _resolve_ai_model(config: Dict[str, Any]) -> Any:
     if not ai_config.get("enabled", False):
         return None
 
-    model_path = str(ai_config.get("model_path", "models/trade_filter.pkl"))
-    model = load_ai_model(model_path)
+    model, provider, model_ref = resolve_ai_model(config)
     if model is None:
-        print(f"[AI] WARNING: ai.enabled=True but model not found at {model_path}. AI filter disabled.")
+        print(
+            f"[AI] WARNING: ai.enabled=True but provider={provider} model={model_ref} "
+            "is unavailable. AI filter disabled."
+        )
     else:
-        print(f"[AI] Model loaded from {model_path}")
+        print(f"[AI] Model loaded: provider={provider} ref={model_ref}")
     return model
 
 

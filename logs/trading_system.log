@@ -1,0 +1,11 @@
+2026-02-23 14:32:04 | INFO | forex_system | Live runner started for EURUSD H1
+2026-02-23 14:32:04 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:32:24 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:32:44 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:33:04 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:33:24 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:33:44 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:34:04 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:34:24 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:34:44 | WARNING | forex_system | No candles available; sleeping.
+2026-02-23 14:34:53 | INFO | forex_system | Live runner stop event received. Exiting loop.

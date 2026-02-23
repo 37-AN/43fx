@@ -1,22 +1,19 @@
 broker:
   type: dummy
-  api_base_url: "https://api-fxpractice.oanda.com"
-  account_id: "YOUR_ACCOUNT_ID"
-  api_key: "YOUR_API_KEY"
-
+  api_base_url: https://api-fxpractice.oanda.com
+  account_id: YOUR_ACCOUNT_ID
+  api_key: YOUR_API_KEY
 trading:
   instruments:
-    - EURUSD
+  - EURUSD
   timeframe: H1
   polling_interval_seconds: 20
-
 risk:
   risk_per_trade: 0.01
   max_daily_loss_pct: 0.03
   max_drawdown_pct: 0.12
   pip_value_per_lot: 10.0
   account_currency: USD
-
 strategy:
   ema_fast_period: 20
   ema_slow_period: 50
@@ -28,30 +25,30 @@ strategy:
   pip_size: 0.0001
   debug: false
   relaxed_mode: false
-
 session:
   start_hour: 8
   end_hour: 17
-  timezone: "UTC"
-
+  timezone: UTC
 data:
   use_synthetic: false
   bars: 3000
-  drift_per_bar: 0.00005
+  drift_per_bar: 5.0e-05
   volatility: 0.0003
   seed: 42
-
 ai:
-  enabled: false
-  model_type: "logistic"
-  model_path: "models/trade_filter.pkl"
+  enabled: true
+  provider: ollama
+  model_type: ollama
+  model_path: ollama:llama3.2:1b
+  ollama_model: llama3.2:1b
+  ollama_base_url: http://127.0.0.1:11434
+  ollama_timeout_seconds: 8
   train_min_trades: 200
   probability_threshold: 0.55
   features:
     use_session_flags: true
     use_volatility_features: true
     use_trend_slope: true
-
 logging:
   level: INFO
   file: logs/trading_system.log
