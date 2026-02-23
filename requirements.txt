@@ -1,0 +1,7 @@
+backtrader
+pandas
+PyYAML
+requests
+httpx
+scikit-learn
+joblib
