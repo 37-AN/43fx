@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #000000;
+  color: #e5e7eb;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.panel {
+  @apply rounded border border-[#1f2937] bg-panel p-4 shadow-neon;
+}
+
+.metric {
+  @apply font-mono text-sm text-zinc-300;
+}

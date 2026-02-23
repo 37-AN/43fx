@@ -5,3 +5,5 @@ requests
 httpx
 scikit-learn
 joblib
+fastapi
+uvicorn[standard]

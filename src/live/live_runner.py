@@ -5,7 +5,8 @@ from __future__ import annotations
 import argparse
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from threading import Event
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
@@ -138,21 +139,36 @@ class LiveTradingRunner:
             for pos in positions
         )
 
-    def run_forever(self) -> None:
+    def run_forever(
+        self,
+        stop_event: Optional[Event] = None,
+        on_order: Optional[Callable[[Dict[str, Any]], None]] = None,
+        on_heartbeat: Optional[Callable[[Dict[str, Any]], None]] = None,
+    ) -> None:
         """Start continuous polling loop."""
         self.logger.info("Live runner started for %s %s", self.instrument, self.timeframe)
         while True:
+            if stop_event is not None and stop_event.is_set():
+                self.logger.info("Live runner stop event received. Exiting loop.")
+                break
+
             try:
                 candles_raw = self.broker.get_latest_candles(self.instrument, self.timeframe, limit=500)
                 candles_df = self._candles_to_df(candles_raw)
                 if candles_df.empty:
                     self.logger.warning("No candles available; sleeping.")
-                    time.sleep(self.polling_interval_seconds)
+                    if stop_event is not None:
+                        stop_event.wait(self.polling_interval_seconds)
+                    else:
+                        time.sleep(self.polling_interval_seconds)
                     continue
 
                 last_closed_ts = candles_df.index[-1]
                 if self.last_processed_timestamp is not None and last_closed_ts <= self.last_processed_timestamp:
-                    time.sleep(self.polling_interval_seconds)
+                    if stop_event is not None:
+                        stop_event.wait(self.polling_interval_seconds)
+                    else:
+                        time.sleep(self.polling_interval_seconds)
                     continue
 
                 self.last_processed_timestamp = last_closed_ts
@@ -175,17 +191,31 @@ class LiveTradingRunner:
 
                 if not signal:
                     self.logger.info("No signal on candle close %s", last_closed_ts.isoformat())
-                    time.sleep(self.polling_interval_seconds)
+                    if stop_event is not None:
+                        stop_event.wait(self.polling_interval_seconds)
+                    else:
+                        time.sleep(self.polling_interval_seconds)
                     continue
 
                 direction = signal["direction"]
                 if self._has_position_for_direction(direction):
                     self.logger.info("Skipped %s signal: existing %s position present.", direction, direction)
-                    time.sleep(self.polling_interval_seconds)
+                    if stop_event is not None:
+                        stop_event.wait(self.polling_interval_seconds)
+                    else:
+                        time.sleep(self.polling_interval_seconds)
                     continue
 
                 equity = float(self.broker.get_account_equity())
                 risk_state = self._risk_state(equity)
+                if on_heartbeat is not None:
+                    on_heartbeat(
+                        {
+                            "equity": equity,
+                            "daily_loss_pct": risk_state["daily_loss_pct"],
+                            "drawdown_pct": risk_state["drawdown_pct"],
+                        }
+                    )
                 if not self.risk_engine.can_open_new_trade(
                     daily_realized_loss_pct=risk_state["daily_loss_pct"],
                     current_drawdown_pct=risk_state["drawdown_pct"],
@@ -195,7 +225,10 @@ class LiveTradingRunner:
                         risk_state["daily_loss_pct"] * 100,
                         risk_state["drawdown_pct"] * 100,
                     )
-                    time.sleep(self.polling_interval_seconds)
+                    if stop_event is not None:
+                        stop_event.wait(self.polling_interval_seconds)
+                    else:
+                        time.sleep(self.polling_interval_seconds)
                     continue
 
                 lots = self.risk_engine.size_position(
@@ -206,7 +239,10 @@ class LiveTradingRunner:
                 )
                 if lots <= 0:
                     self.logger.warning("Calculated lot size is zero; skipping order.")
-                    time.sleep(self.polling_interval_seconds)
+                    if stop_event is not None:
+                        stop_event.wait(self.polling_interval_seconds)
+                    else:
+                        time.sleep(self.polling_interval_seconds)
                     continue
 
                 response = self.broker.place_market_order(
@@ -217,11 +253,16 @@ class LiveTradingRunner:
                     take_profit=float(signal["take_profit"]),
                 )
                 self.logger.info("Order placed: %s", response)
+                if on_order is not None:
+                    on_order(response)
 
             except Exception as exc:  # noqa: BLE001
                 self.logger.exception("Live loop error: %s", exc)
 
-            time.sleep(self.polling_interval_seconds)
+            if stop_event is not None:
+                stop_event.wait(self.polling_interval_seconds)
+            else:
+                time.sleep(self.polling_interval_seconds)
 
 
 def main() -> None:
